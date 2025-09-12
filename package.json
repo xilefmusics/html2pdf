@@ -1,0 +1,15 @@
+{
+  "name": "html2pdf",
+  "version": "1.0.0",
+  "description": "A simple Express server setup for printing multiple HTML files into one PDF.",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "license": "GPL-3.0"
+}
