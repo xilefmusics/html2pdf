@@ -1,7 +1,8 @@
 const express = require('express');
 const multer = require('multer');
-const { htmlToPdfBuffer } = require('./print');
-const { mergePdfBuffers } = require('./merge');
+const print = require('./print');
+const merge = require('./merge');
+const outline = require('./outline');
 const router = express.Router();
 
 const upload = multer();
@@ -55,17 +56,24 @@ router.post('/print', upload.array('files'), async (req, res, next) => {
     }
 
     const pdfBuffers = await Promise.all(
-      req.files.map(file => htmlToPdfBuffer(file.buffer.toString('utf-8')))
+      req.files.map(file => print(file.buffer.toString('utf-8')))
     );
 
-    const mergedPdf = await mergePdfBuffers(pdfBuffers);
+    const mergedPdf = await merge(pdfBuffers);
+
+    const toc = req.files.map((file, idx) => ({
+      title: file.originalname || `Document ${idx + 1}`,
+      page: idx + 1,
+    }));
+
+    const outlinedPdf = await outline(mergedPdf, toc);
 
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': 'attachment; filename="output.pdf"',
-      'Content-Length': mergedPdf.length,
+      'Content-Length': outlinedPdf.length,
     });
-    res.end(mergedPdf);
+    res.end(outlinedPdf);
   } catch (err) {
     next(err);
   }

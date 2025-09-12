@@ -1,6 +1,6 @@
 const { PDFDocument } = require('pdf-lib');
 
-async function mergePdfBuffers(pdfBuffers) {
+module.exports = async (pdfBuffers) => {
   const mergedPdf = await PDFDocument.create();
   for (const pdfBuffer of pdfBuffers) {
     const pdf = await PDFDocument.load(pdfBuffer);
@@ -10,5 +10,3 @@ async function mergePdfBuffers(pdfBuffers) {
   const mergedBuffer = await mergedPdf.save();
   return Buffer.from(mergedBuffer);
 }
-
-module.exports = { mergePdfBuffers };

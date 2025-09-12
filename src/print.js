@@ -14,7 +14,7 @@ let initPromise;
 let pagePool = [];
 const waiters = [];
 
-async function makePage() {
+const makePage = async () => {
   const page = await browser.newPage();
   await page.setCacheEnabled(true);
   await page.emulateMediaType("print");
@@ -22,7 +22,7 @@ async function makePage() {
   return page;
 }
 
-async function init() {
+const init = async () => {
   if (initPromise) return initPromise;
   initPromise = (async () => {
     browser = await puppeteer.launch({
@@ -43,19 +43,19 @@ async function init() {
   return initPromise;
 }
 
-function getPage() {
+const getPage = () => {
   const page = pagePool.pop();
   if (page) return Promise.resolve(page);
   return new Promise((resolve) => waiters.push({ resolve }));
 }
 
-function releasePage(page) {
+const releasePage = page => {
   const waiter = waiters.shift();
   if (waiter) waiter.resolve(page);
   else pagePool.push(page);
 }
 
-async function htmlToPdfBuffer(html) {
+module.exports = async html => {
   await init();
   const page = await getPage();
   try {
@@ -65,5 +65,3 @@ async function htmlToPdfBuffer(html) {
     releasePage(page);
   }
 }
-
-module.exports = { htmlToPdfBuffer };
