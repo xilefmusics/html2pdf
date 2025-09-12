@@ -1,5 +1,10 @@
 const express = require('express');
+const multer = require('multer');
+const { htmlToPdfBuffer } = require('./print');
+const { mergePdfBuffers } = require('./merge');
 const router = express.Router();
+
+const upload = multer();
 
 /**
  * @swagger
@@ -11,8 +16,8 @@ const router = express.Router();
  *         description: Service is healthy
  */
 router.get('/health', (req, res) => {
-    res.set('Cache-Control', 'no-store');
-    res.json({ status: 'ok' });
+  res.set('Cache-Control', 'no-store');
+  res.json({ status: 'ok' });
 });
 
 /**
@@ -43,8 +48,27 @@ router.get('/health', (req, res) => {
  *               type: string
  *               format: binary
  */
-router.post('/print', (req, res) => {
-    res.status(501).send('Not implemented');
+router.post('/print', upload.array('files'), async (req, res, next) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+
+    const pdfBuffers = await Promise.all(
+      req.files.map(file => htmlToPdfBuffer(file.buffer.toString('utf-8')))
+    );
+
+    const mergedPdf = await mergePdfBuffers(pdfBuffers);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="output.pdf"',
+      'Content-Length': mergedPdf.length,
+    });
+    res.end(mergedPdf);
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = router;
