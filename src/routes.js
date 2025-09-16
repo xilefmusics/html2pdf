@@ -40,6 +40,10 @@ router.get('/health', (req, res) => {
  *                 items:
  *                   type: string
  *                   format: binary
+ *               outline:
+ *                 type: boolean
+ *                 description: Whether to generate a PDF outline (table of contents/bookmarks)
+ *                 default: false
  *     responses:
  *       200:
  *         description: PDF file
@@ -55,25 +59,28 @@ router.post('/print', upload.array('files'), async (req, res, next) => {
       return res.status(400).json({ error: 'No files uploaded' });
     }
 
-    const pdfBuffers = await Promise.all(
-      req.files.map(file => print(file.buffer.toString('utf-8')))
-    );
+    let pdfBuffer;
+    if (req.files.length === 1) {
+      pdfBuffer = await print(req.files[0].buffer.toString('utf-8'));
+    } else {
+      pdfBuffer = await merge(await Promise.all(
+        req.files.map(file => print(file.buffer.toString('utf-8')))
+      ));
+    }
 
-    const mergedPdf = await merge(pdfBuffers);
-
-    const toc = req.files.map((file, idx) => ({
-      title: file.originalname || `Document ${idx + 1}`,
-      page: idx + 1,
-    }));
-
-    const outlinedPdf = await outline(mergedPdf, toc);
+    if (req.body.outline === 'true') {
+      const toc = req.files.map((file, idx) =>
+        `${idx + 1}||${file.originalname.replace(/\.[^/.]+$/, '')}`
+      ).join('\n');
+      pdfBuffer = await outline(pdfBuffer, toc);
+    }
 
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': 'attachment; filename="output.pdf"',
-      'Content-Length': outlinedPdf.length,
+      'Content-Length': pdfBuffer.length,
     });
-    res.end(outlinedPdf);
+    res.end(pdfBuffer);
   } catch (err) {
     next(err);
   }

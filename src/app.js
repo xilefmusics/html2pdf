@@ -1,5 +1,5 @@
 const express = require('express');
-const indexRouter = require('./routes');
+const router = require('./routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -39,11 +39,11 @@ const swaggerOptions = {
       description: 'API for converting multiple HTML files to a single PDF',
     },
   },
-  apis: ['./src/routes/*.js'],
+  apis: ['./src/*.js'],
 };
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-app.use('/', indexRouter);
+app.use('/', router);
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const PORT = process.env.PORT || 3000;
