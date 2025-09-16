@@ -1,7 +1,6 @@
-const os = require("os");
 const puppeteer = require("puppeteer");
 
-const CONCURRENCY = Math.max(2, Math.min(8, os.cpus().length));
+const CONCURRENCY = parseInt(process.env.CONCURRENCY, 10) || 4;
 const PDF_OPTIONS = {
   format: "A4",
   printBackground: true,
