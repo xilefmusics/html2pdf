@@ -7,6 +7,7 @@
     "start": "node src/app.js"
   },
   "dependencies": {
+    "@lillallol/outline-pdf": "^4.0.0",
     "express": "^4.17.1",
     "multer": "^2.0.2",
     "pdf-lib": "^1.17.1",
